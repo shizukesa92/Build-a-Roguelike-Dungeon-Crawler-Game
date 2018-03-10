@@ -1,19 +1,23 @@
-createMap = (width = 100, height = 100, maxRoomSize = 20, minRoomSize = 6, maxHallLength = 5, numRooms = 20, roomChance = .75) => {
+// Function that generates a random map with a pre-defined minimum and maximum number of rooms with pre-defined maximum and minimum sizes in a grid with a pre-defined width and height
+createMap = (rooms = 20) => {
 
-	// Initializes grid
+	// Generates empty map with walls using a multidimensional array
+	const width = 100,
+		height = 100;
 	let map = Array(width).fill(0);
-	const blankCol = Array(height).fill(0);
-	map = map.map(() => blankCol);
+	const y = Array(height).fill(0);
+	map = map.map(() => y);
 
 	// Fills map with a square grid room from defined x1,y1 to x2,y2
-	fillRect = (map, startCoord, endCoord, fillVal) => {
-		for (let i = startCoord.x; i < startCoord.x + endCoord.x; i++) {
-			map[i].fill(fillVal, startCoord.y, endCoord.y + startCoord.y);
+	room = (map, start, end) => {
+		for (let i = start.x; i < start.x + end.x; i++) {
+			map[i].fill(1, start.y, end.y + start.y);
 		}
 		return map;
 	}
 
-	fillRect(map, {
+	// First map seeded
+	room(map, {
 		x: 45,
 		y: 45
 	}, {
@@ -21,112 +25,114 @@ createMap = (width = 100, height = 100, maxRoomSize = 20, minRoomSize = 6, maxHa
 		y: 10
 	}, 1);
 
-	// Takes a map matrix and a coordinate object
-	// Returns false if not a wall, otherwise the direction of the open tile
+	// Finds a wall tile with an adjacent room, returning the direction of the wall tile
 	isWall = (map, coords) => {
 		// return false if tile isn't wall
 		if (map[coords.x][coords.y] !== 0) {
 			return false;
 		}
-		// left is open
-		if (typeof map[coords.x - 1] !== 'undefined' && map[coords.x - 1][coords.y] == 1) {
-			return 'left';
+		if (typeof map[coords.x - 1] !== "undefined" && map[coords.x - 1][coords.y] == 1) {
+			return "left";
 		}
-		// right is open
-		if (typeof map[coords.x + 1] !== 'undefined' && map[coords.x + 1][coords.y] == 1) {
-			return 'right';
+		if (typeof map[coords.x + 1] !== "undefined" && map[coords.x + 1][coords.y] == 1) {
+			return "right";
 		}
-		// top is open
 		if (map[coords.x][coords.y - 1] == 1) {
-			return 'top';
+			return "top";
 		}
-		// bottom is open
 		if (map[coords.x][coords.y + 1] == 1) {
-			return 'bottom';
+			return "bottom";
 		}
-
 		return false;
 	}
 
-	// Loops until it finds a wall tile
 	findWall = (map) => {
 		const coords = {
 			x: 0,
 			y: 0
 		};
-		let wallDir = false;
-		while (!wallDir) {
+		let wall = false;
+		while (!wall) {
 			coords.x = Math.floor(Math.random() * map.length);
 			coords.y = Math.floor(Math.random() * map[0].length);
-			wallDir = isWall(map, coords);
+			wall = isWall(map, coords);
 		}
 		return {
 			coords: coords,
-			openDir: wallDir
+			direction: wall
 		};
 	}
 
-	// Will keep trying to place random rooms in random places until it succeeds.
+	// Places a room in a random location that is separated by a single wall block and validates location
 	placeRoom = (map) => {
-		let wall, width, height, isRoom, startX, startY, coords, numClear;
+
 		while (true) {
-			// Create random location and room
 			numClear = 0;
-			wall = findWall(map);
-			coords = wall.coords;
-			width = Math.floor((Math.random() * (maxRoomSize - minRoomSize)) + minRoomSize);
-			height = Math.floor((Math.random() * (maxRoomSize - minRoomSize)) + minRoomSize);
-			switch (wall.openDir) {
-				case 'right':
-					startX = coords.x - width;
-					startY = (coords.y - Math.floor(height / 2)) + getDoorOffset(height);
+			const wall = findWall(map),
+				coords = wall.coords;
+
+			const size = 15,
+				rwidth = Math.floor(Math.random() * size),
+				rheight = Math.floor(Math.random() * size);
+
+			// Creates a starting X,Y coordinate for the new room on the OPPOSITE side of the open tile
+			let startX, startY;
+			switch (wall.direction) {
+				case "right":
+					startX = coords.x - rwidth;
+					// Randomizes y location. From door location (coords.x,coords.y), moves it the room down/left by a little over its length then moves it back up/right but not more than a random fraction of its length
+					startY = coords.y - (rheight + 1) + Math.random() * rheight;
 					break;
-				case 'left':
+				case "left":
 					startX = coords.x + 1;
-					startY = (coords.y - Math.floor(height / 2)) + getDoorOffset(height);
+					startY = coords.y - (rheight + 1) + Math.random() * rheight;
 					break;
-				case 'top':
-					startX = (coords.x - Math.floor(width / 2)) + getDoorOffset(width);
+				case "top":
+					startX = coords.x - (rwidth + 1) + Math.random() * rwidth;
 					startY = coords.y + 1;
 					break;
-				case 'bottom':
-					startX = (coords.x - Math.floor(width / 2)) + getDoorOffset(width);
+				case "bottom":
+					startX = coords.y - (rheight + 1) + Math.random() * rheight;
 					startY = coords.y - height;
 					break;
 				default:
 					break;
 			}
-			// Exit if room would be outside matrix
+
+			// Restarts room from while loop if room extends outside map
 			if (startX < 0 || startY < 0 || startX + width >= map.length || startY + height >= map[0].length) {
 				continue;
 			}
-			// check if all spaces are clear
+
+			// Fills room if all spaces are clear
+			let clear;
 			for (let i = startX; i < startX + width; i++) {
-				if (map[i].slice(startY, startY + height).every(tile => tile === tileType.WALL)) {
-					numClear++;
+				if (map[i].slice(startY, startY + rheight).every(tile => tile === 0)) {
+					clear++;
 				}
 			}
-			if (numClear === width) {
-				fillRect(map, {
+
+			if (clear == rwidth) {
+				room(map, {
 					x: startX,
 					y: startY
 				}, {
-					x: width,
-					y: height
-				}, tileType.FLOOR);
+					x: rwidth,
+					y: rheight
+				}, 1);
+
+				// Creates door
 				map[coords.x][coords.y] = 1;
 				return map;
 			}
 		}
 
-		getDoorOffset = (length) => {
-			return Math.floor((Math.random() * length) - Math.floor((length - 1) / 2));
-		}
+
 	}
 
 
 	// create rooms
-	for (let x = 0; x < numRooms; x++) {
+	for (let x = 0; x < rooms; x++) {
 		placeRoom(map);
 	}
 
