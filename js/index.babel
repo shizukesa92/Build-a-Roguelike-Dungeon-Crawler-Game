@@ -1,14 +1,14 @@
 const generate = () => {
 	// Generates a random array of length equals to grid height  
-	const height = 100,
-		width = 100;
+	const height = 50,
+		width = 50;
 	let map = [];
 
 	for (let y = 0; y < height; y++) {
 		map.push([]);
 		for (let x = 0; x < width; x++) {
 			map[y].push({
-				type: 0,
+				type: "wall",
 			});
 		}
 	}
@@ -16,10 +16,10 @@ const generate = () => {
 	// Generates seed of a random height between min and max room heights, and of a starting x,y that does not exceed max height and width (with an offset to prevent room from hitting wall
 
 	const seed = {
-		xcoords: 1 + Math.floor(Math.random() * 75),
-		ycoords: 1 + Math.floor(Math.random() * 75),
-		rheight: 10 + Math.floor(Math.random() * 10),
-		rwidth: 10 + Math.floor(Math.random() * 10)
+		xcoords: 1 + Math.floor(Math.random() * 35),
+		ycoords: 1 + Math.floor(Math.random() * 35),
+		rheight: 3 + Math.floor(Math.random() * 7),
+		rwidth: 3 + Math.floor(Math.random() * 7)
 	};
 
 	// Places seed in map
@@ -33,7 +33,7 @@ const generate = () => {
 		for (let i = ycoords; i < ycoords + rheight; i++) {
 			for (let j = xcoords; j < xcoords + rwidth; j++) {
 				map[i][j] = {
-					type: 1,
+					type: "floor",
 					id
 				};
 			}
@@ -48,63 +48,86 @@ const generate = () => {
 		rwidth,
 		rheight
 	}) => {
-
-		// Attempts to place rooms in given direction
+		// Attempts to place rooms in given direction, note that y extends downwards because rendering the squares starts from top left to bottom right
 		const rooms = [];
 
-		const north = {
-			height: 10 + Math.floor(Math.random() * 10),
-			width: 10 + Math.floor(Math.random() * 10),
-			xcoords: xcoords + Math.floor(Math.random() * rwidth - 1),
-			ycoords: ycoords + north.height + 1,
-			xdoor: north.x + Math.floor(Math.random * Math.min(xcoords + rwidth, north.xcoords + north.rwidth) - 1),
-			ydoor: north.ycoords - 1
-		};
-
-		rooms.push(north);
-
 		const south = {
-			rheight: 10 + Math.floor(Math.random() * 10),
-			rwidth: 10 + Math.floor(Math.random() * 10),
-			xcoords: xcoords + Math.floor(Math.random() * rwidth - 1),
-			ycoords: ycoords - south.height - 1,
-			xdoor: south.x + Math.floor(Math.random * Math.min(xcoords + rwidth, south.xcoords + south.rwidth) - 1),
-			ydoor: ycoords - 1
+			rheight: 3 + Math.floor(Math.random() * 7),
+			rwidth: 3 + Math.floor(Math.random() * 7)
 		};
+
+		south.xcoords = xcoords + Math.floor(Math.random() * rwidth - 1);
+		south.ycoords = ycoords + south.rheight + 1;
+		south.xdoor = south.xcoords + Math.floor(Math.random * Math.min(xcoords + rwidth, south.xcoords + south.rwidth) - 1);
+		south.ydoor = south.ycoords - 1;
 
 		rooms.push(south);
 
-		const east = {
-			rheight: 10 + Math.floor(Math.random() * 10),
-			rwidth: 10 + Math.floor(Math.random() * 10),
-			xcoords: xcoords + rwidth + 1,
-			ycoords: ycoords + Math.floor(Math.random * rheight - 1),
-			xdoor: east.xcoords - 1,
-			ydoor: east.ycoords + Math.floor(Math.random * Math.min(east.ycoords + east.rheight, ycoords + rheight) - 1)
-		};
+		const north = {
+			rheight: 3 + Math.floor(Math.random() * 7),
+			rwidth: 3 + Math.floor(Math.random() * 7)
 
+		};
+		north.xcoords = xcoords + Math.floor(Math.random() * rwidth - 1);
+		north.ycoords = ycoords - north.rheight - 1;
+		north.xdoor = north.xcoords + Math.floor(Math.random * Math.min(xcoords + rwidth, north.xcoords + north.rwidth) - 1);
+		north.ydoor = ycoords - 1;
+		rooms.push(north);
+
+		const east = {
+			rheight: 3 + Math.floor(Math.random() * 7),
+			rwidth: 3 + Math.floor(Math.random() * 7)
+		};
+		east.xcoords = xcoords + rwidth + 1;
+		east.ycoords = ycoords + Math.floor(Math.random * rheight - 1);
+		east.xdoor = east.xcoords - 1;
+		east.ydoor = east.ycoords + Math.floor(Math.random * Math.min(east.ycoords + east.rheight, ycoords + rheight) - 1);
 		rooms.push(east);
 
 		const west = {
-			rheight: 10 + Math.floor(Math.random() * 10),
-			rwidth: 10 + Math.floor(Math.random() * 10),
-			xcoords: xcoords - rwidth - 1,
-			ycoords: ycoords + Math.floor(Math.random * rheight - 1),
-			xdoor: xcoords - 1,
-			ydoor: west.ycoords + Math.floor(Math.random * Math.min(west.ycoords + west.rheight, ycoords + rheight) - 1)
+			rheight: 3 + Math.floor(Math.random() * 7),
+			rwidth: 3 + Math.floor(Math.random() * 7)
 		};
-
+		west.xcoords = xcoords - rwidth - 1;
+		west.ycoords = ycoords + Math.floor(Math.random * rheight - 1);
+		west.xdoor = xcoords - 1;
+		west.ydoor = west.ycoords + Math.floor(Math.random * Math.min(west.ycoords + west.rheight, ycoords + rheight) - 1);
 		rooms.push(west);
+		// Validifies map placement
+		const valid = (map, {
+			xcoords,
+			ycoords,
+			rwidth = 1,
+			rheight = 1
+		}) => {
+			// Checks if room exceeds map parameters
+			if (ycoords < 1 || ycoords + rheight > map.length - 1) {
+				return false;
+			}
+			if (xcoords < 1 || xcoords + rwidth > map[0].length - 1) {
+				return false;
+			}
 
+			// Checks for room collision
+			for (let i = ycoords - 1; i < ycoords + rheight + 1; i++) {
+				for (let j = xcoords - 1; j < xcoords + rwidth + 1; j++) {
+					if (map[i][j].type == "floor") {
+						return false;
+					}
+				}
+			}
+			return true;
+		};
 		const placed = [];
 		rooms.forEach(room => {
 			if (valid(map, room)) {
-				map = grow(map, room);
+				map = place(map, room);
 				map = place(map, {
 					xcoords: room.xdoor,
-					ycoords: room.ydoor
+					ycoords: room.ydoor,
+					rheight: 1,
+					rwidth: 1
 				});
-				// need placed room values for the next seeds
 				placed.push(room);
 			}
 		});
@@ -114,45 +137,62 @@ const generate = () => {
 		};
 	};
 
-	// Validifies map placement
-	const valid = (map, {
-		xcoords,
-		ycoords,
-		rwidth,
-		rheight
-	}) => {
-		// Checks if room exceeds map parameters
-		if (ycoords < 1 || ycoords + rheight > map.length - 1) {
-			return false;
-		}
-		if (xcoords < 1 || xcoords + rwidth > map[0].length - 1) {
-			return false;
-		}
 
-		// Checks for room collision
-		for (let i = ycoords - 1; i < ycoords + height + 1; i++) {
-			for (let j = xcoords - 1; j < xcoords + rwidth + 1; j++) {
-				if (grid[i][j].type == 1) {
-					return false;
-				}
-			}
-		}
-		return true;
-	};
 
 	// Fills map recursively
-	const fill = (map, rooms, count) => {
-		if (count + 1 > 5 || !rooms.length) {
+	const fill = (map, rooms, count = 0) => {
+		if (count + rooms.length > 5) {
 			return map;
 		}
-
 		map = grow(map, rooms.pop());
 		rooms.push(...map.placed);
 		count += map.placed.length;
 		return fill(map.map, rooms, count);
 	};
-	return fill(map, seed);
+	return fill(map, [seed]);
 
 
 
 };
+
+
+class Main extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+
+	render() {
+
+		const store = generate();
+		const squares = store.map((element, index) => {
+			return (
+
+				element.map((square, i) => {
+					return (
+						<div className={
+                "square " + square.type 
+                   }
+                key={i}
+                 >
+                </div>
+					)
+				})
+
+			)
+		});
+
+
+
+
+		return (
+			<div>
+					{squares}
+      </div>
+		)
+	}
+};
+
+ReactDOM.render(
+	<Main />,
+	document.getElementById("board")
+);
