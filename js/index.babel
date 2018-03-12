@@ -58,7 +58,7 @@ const generate = () => {
 
 		south.xcoords = xcoords + Math.floor(Math.random() * rwidth - 1);
 		south.ycoords = ycoords + south.rheight + 1;
-		south.xdoor = south.xcoords + Math.floor(Math.random * Math.min(xcoords + rwidth, south.xcoords + south.rwidth) - 1);
+		south.xdoor = south.xcoords + Math.floor(Math.random() * Math.min(xcoords + rwidth, south.xcoords + south.rwidth) - 1);
 		south.ydoor = south.ycoords - 1;
 
 		rooms.push(south);
@@ -70,7 +70,7 @@ const generate = () => {
 		};
 		north.xcoords = xcoords + Math.floor(Math.random() * rwidth - 1);
 		north.ycoords = ycoords - north.rheight - 1;
-		north.xdoor = north.xcoords + Math.floor(Math.random * Math.min(xcoords + rwidth, north.xcoords + north.rwidth) - 1);
+		north.xdoor = north.xcoords + Math.floor(Math.random() * Math.min(xcoords + rwidth, north.xcoords + north.rwidth) - 1);
 		north.ydoor = ycoords - 1;
 		rooms.push(north);
 
@@ -79,9 +79,9 @@ const generate = () => {
 			rwidth: 3 + Math.floor(Math.random() * 7)
 		};
 		east.xcoords = xcoords + rwidth + 1;
-		east.ycoords = ycoords + Math.floor(Math.random * rheight - 1);
+		east.ycoords = ycoords + Math.floor(Math.random() * rheight - 1);
 		east.xdoor = east.xcoords - 1;
-		east.ydoor = east.ycoords + Math.floor(Math.random * Math.min(east.ycoords + east.rheight, ycoords + rheight) - 1);
+		east.ydoor = east.ycoords + Math.floor(Math.random() * Math.min(east.ycoords + east.rheight, ycoords + rheight) - 1);
 		rooms.push(east);
 
 		const west = {
@@ -89,9 +89,9 @@ const generate = () => {
 			rwidth: 3 + Math.floor(Math.random() * 7)
 		};
 		west.xcoords = xcoords - rwidth - 1;
-		west.ycoords = ycoords + Math.floor(Math.random * rheight - 1);
+		west.ycoords = ycoords + Math.floor(Math.random() * rheight - 1);
 		west.xdoor = xcoords - 1;
-		west.ydoor = west.ycoords + Math.floor(Math.random * Math.min(west.ycoords + west.rheight, ycoords + rheight) - 1);
+		west.ydoor = west.ycoords + Math.floor(Math.random() * Math.min(west.ycoords + west.rheight, ycoords + rheight) - 1);
 		rooms.push(west);
 		// Validifies map placement
 		const valid = (map, {
@@ -122,6 +122,7 @@ const generate = () => {
 		rooms.forEach(room => {
 			if (valid(map, room)) {
 				map = place(map, room);
+				console.log(room);
 				map = place(map, {
 					xcoords: room.xdoor,
 					ycoords: room.ydoor,
@@ -141,7 +142,7 @@ const generate = () => {
 
 	// Fills map recursively
 	const fill = (map, rooms, count = 0) => {
-		if (count + rooms.length > 5) {
+		if (count > 5) {
 			return map;
 		}
 		map = grow(map, rooms.pop());
