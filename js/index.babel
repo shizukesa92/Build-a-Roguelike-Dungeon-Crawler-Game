@@ -112,6 +112,7 @@ const generate = () => {
 		for (let x = 0; x < width; x++) {
 			map[y].push({
 				type: "wall",
+				opacity: 0
 			});
 		}
 	}
@@ -131,13 +132,11 @@ const generate = () => {
 		ycoords,
 		rwidth,
 		rheight,
-		id
 	}) => {
 		for (let i = ycoords; i < ycoords + rheight; i++) {
 			for (let j = xcoords; j < xcoords + rwidth; j++) {
 				map[i][j] = {
 					type: "floor",
-					id
 				};
 			}
 		}
@@ -270,15 +269,22 @@ class Main extends React.Component {
 			entity,
 			position
 		} = entities(generate());
-		const squares = entity.map((element, index) => {
+		const [playerx, playery] = position;
+
+		const fog = entity.map((width, y) => width.map((square, x) => {
+			square.distance = (Math.abs(playery - y)) + (Math.abs(playerx - x));
+			square.distance > 10 ? square.opacity = 1 : square.opacity = 0;
+			return square;
+		}));
+
+		const squares = entity.map(width => {
 			return (
 
-				element.map((square, i) => {
+				width.map(square => {
 					return (
 						<div className={
                 "square " + square.type 
                    }
-                key={i}
                  >
                 </div>
 					)
