@@ -1,3 +1,106 @@
+const entities = (map, level = 1) => {
+
+	const bosses = [];
+	if (level == 4) {
+		bosses.push({
+			health: 400,
+			level: 5,
+			type: "boss"
+		});
+	}
+
+	const enemies = [];
+	for (let i = 0; i < 7; i++) {
+		enemies.push({
+			health: level * 30 + 40,
+			level: level - 1 + Math.floor(Math.random() * 3),
+			type: "enemy"
+		});
+	}
+	const player = [{
+		type: "player"
+	}];
+
+	const potions = [];
+	for (let i = 0; i < 5; i++) {
+		potions.push({
+			type: "potion"
+		});
+	}
+
+	const weapons = [{
+			name: "Laser Pistol",
+			damage: 15,
+			type: "weapon"
+		},
+		{
+			name: "Laser Rifle",
+			damage: 19,
+			type: "weapon"
+		},
+		{
+			name: "Plasma Pistol",
+			damage: 26,
+			type: "weapon"
+		},
+		{
+			name: "Plasma Rifle",
+			damage: 28,
+			type: "weapon"
+		},
+		{
+			name: "Electric ChainSaw",
+			damage: 31,
+			type: "weapon"
+		},
+		{
+			name: "Railgun",
+			damage: 33,
+			type: "weapon"
+		},
+		{
+			name: "Dark Energy Cannon",
+			damage: 40,
+			type: "weapon"
+		},
+		{
+			name: "BFG",
+			damage: 43,
+			type: "weapon"
+		}
+	];
+
+	let weapon = [];
+	for (let i = 0; i < 3; i++) {
+		const random = weapons[Math.floor(Math.random() * 8)];
+		weapon.push(random);
+	}
+
+	let position = [];
+
+	[potions, enemies, weapons, player, bosses].forEach(entity => {
+
+		while (entity.length) {
+			const x = Math.floor(Math.random() * 50);
+			const y = Math.floor(Math.random() * 50);
+
+			if (map[y][x].type == "floor") {
+
+				if (entity[0].type == "player") {
+					position = [x, y];
+				}
+				map[y][x] = entity.pop();
+			}
+		}
+	});
+	return {
+		entity: map,
+		position
+	};
+}
+
+
+// Map generator
 const generate = () => {
 	// Generates a random array of length equals to grid height  
 	const height = 50,
@@ -141,7 +244,7 @@ const generate = () => {
 
 	// Fills map recursively
 	const fill = (map, rooms, count = 0) => {
-		if (count > 5) {
+		if (count > 20) {
 			return map;
 		}
 		map = grow(map, rooms.pop());
@@ -163,8 +266,11 @@ class Main extends React.Component {
 
 	render() {
 
-		const store = generate();
-		const squares = store.map((element, index) => {
+		let {
+			entity,
+			position
+		} = entities(generate());
+		const squares = entity.map((element, index) => {
 			return (
 
 				element.map((square, i) => {

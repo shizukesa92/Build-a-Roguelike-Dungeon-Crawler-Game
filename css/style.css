@@ -64,3 +64,20 @@ span {
         width: 1.2vw;
         float: left;
 }
+
+.enemy {
+        background-color: red;
+}
+
+.player {
+        background-color: green;
+}
+
+.potion {
+        background-color: blue;
+}
+
+.weapon {
+        background-color: orange;
+
+}
