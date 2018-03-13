@@ -1,7 +1,8 @@
-const entities = (map, level = 1) => {
+// Creates entities
+const entities = (map, stage = 1) => {
 
 	const bosses = [];
-	if (level == 4) {
+	if (stage == 4) {
 		bosses.push({
 			health: 400,
 			level: 5,
@@ -12,8 +13,8 @@ const entities = (map, level = 1) => {
 	const enemies = [];
 	for (let i = 0; i < 7; i++) {
 		enemies.push({
-			health: level * 30 + 40,
-			level: level - 1 + Math.floor(Math.random() * 3),
+			health: stage * 30 + 40,
+			level: stage - 1 + Math.floor(Math.random() * 3),
 			type: "enemy"
 		});
 	}
@@ -94,7 +95,7 @@ const entities = (map, level = 1) => {
 		}
 	});
 	return {
-		entity: map,
+		entitylist: map,
 		position
 	};
 }
@@ -254,30 +255,122 @@ const generate = () => {
 	return fill(map, [seed]);
 
 
-
 };
 
+// Action
+const initial = {
+	entitylist: [
+		[]
+	],
+	stage: 0,
+	position: []
+};
+
+const change = (entity, coords) => {
+	return {
+		type: "change",
+		payload: {
+			entity,
+			coords
+		}
+	};
+}
+
+const move = (payload) => {
+	return {
+		type: "move",
+		payload
+	};
+}
+
+const start = (stage) => {
+	return {
+		type: "start",
+		payload: entities(generate(), stage)
+	};
+}
+
+const advance = (payload) => {
+	return {
+		type: "advance",
+		payload
+	};
+}
+
+// Reducer
+const initiate = (state = initial, {
+	type,
+	payload
+}) => {
+	switch (type) {
+		case "change":
+			{
+
+				const [x, y] = payload.coords;
+				let newentitylist = Object.assign({}, state.entities);
+				newentitylist[y][x] = payload.entity;
+
+
+				return { ...state,
+					entities: newentitylist
+				};
+			};
+
+
+		case "move":
+			return { ...state,
+				position: payload
+			};
+
+
+		case "start":
+			return {
+				...state,
+				position: payload.position,
+				entitylist: payload.entitylist
+			};
+		case "advance":
+			return { ...state,
+				stage: payload
+			};
+		default:
+			return state;
+	}
+};
+
+// Store
+let store = Redux.createStore(initiate);
+store.dispatch(start(1));
+store.dispatch(advance(1));
 
 class Main extends React.Component {
 	constructor(props) {
 		super(props);
 	}
+	componentDidMount() {
+		this.unsubscribe = store.subscribe(() =>
+			this.forceUpdate()
+		);
+	}
 
+	componentWillUnmount() {
+		this.unsubscribe();
+	}
 	render() {
 
 		let {
-			entity,
+			entitylist,
 			position
-		} = entities(generate());
+		} = store.getState();
 		const [playerx, playery] = position;
 
-		const fog = entity.map((width, y) => width.map((square, x) => {
+		entitylist.map((width, y) => width.map((square, x) => {
 			square.distance = (Math.abs(playery - y)) + (Math.abs(playerx - x));
 			square.distance > 10 ? square.opacity = 1 : square.opacity = 0;
 			return square;
 		}));
 
-		const squares = entity.map(width => {
+		const squares = entitylist.map(width => {
 			return (
 
 				width.map(square => {
