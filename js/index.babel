@@ -342,20 +342,8 @@ const initiate = (state = initial, {
 let store = Redux.createStore(initiate);
 store.dispatch(start(1));
 store.dispatch(advance(1));
+class Dungeon extends React.Component {
 
-class Main extends React.Component {
-	constructor(props) {
-		super(props);
-	}
-	componentDidMount() {
-		this.unsubscribe = store.subscribe(() =>
-			this.forceUpdate()
-		);
-	}
-
-	componentWillUnmount() {
-		this.unsubscribe();
-	}
 	render() {
 
 		let {
@@ -392,6 +380,74 @@ class Main extends React.Component {
 		return (
 			<div>
 					{squares}
+      </div>
+		)
+	}
+};
+class Main extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+
+	input = (vector) => {
+
+		let state = store.getState();
+
+		const [x, y] = state.position;
+		const [newx, newy] = vector;
+
+		const newpos = [newx + x, newy + y];
+
+		const old = state.entitylist[y][x];
+		const destination = state.entitylist[y + newy][x + newx];
+
+
+		store.dispatch(change({
+			type: "floor"
+		}, [x, y]));
+		store.dispatch(change(old, newpos));
+		store.dispatch(move(newpos));
+	};
+	keydown = (event) => {
+		switch (event.keyCode) {
+			case 38:
+			case 87:
+				this.input([0, -1]);
+				break;
+			case 39:
+			case 68:
+				this.input([1, 0]);
+				break;
+			case 40:
+			case 83:
+				this.input([0, 1]);
+				break;
+			case 37:
+			case 65:
+				this.input([-1, 0]);
+				break;
+			default:
+				return;
+		}
+
+	};
+
+	componentDidMount() {
+		this.unsubscribe = store.subscribe(() =>
+			this.forceUpdate()
+		);
+		window.addEventListener("keydown", this.keydown);
+
+	}
+
+	componentWillUnmount() {
+		this.unsubscribe();
+	}
+	render() {
+
+		return (
+			<div>
+					<Dungeon />
       </div>
 		)
 	}
