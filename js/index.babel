@@ -257,6 +257,10 @@ const generate = () => {
 
 };
 
+
+
+
+
 // Action
 const initial = {
 	entitylist: [
@@ -339,8 +343,33 @@ const initiate = (state = initial, {
 	}
 };
 
+// Batch Actions
+
+const batch = (actions) => {
+	return {
+		type: "batch",
+		payload: actions
+	}
+}
+
+// Batch Reducer
+const batchenable = (reducer) => {
+
+	return function batchreduce(state, action) {
+		switch (action.type) {
+			case "batch":
+				return action.payload.reduce(batchreduce, state);
+
+			default:
+				return reducer(state, action);
+		}
+	}
+}
+
+
 // Store
-let store = Redux.createStore(initiate);
+const store = Redux.createStore(batchenable(initiate));
+
 store.dispatch(start(1));
 store.dispatch(advance(1));
 class Dungeon extends React.Component {
@@ -402,12 +431,18 @@ class Main extends React.Component {
 		const old = state.entitylist[y][x];
 		const destination = state.entitylist[y + newy][x + newx];
 
+		if (destination.type !== "wall" && destination.type !== "enemy" && destination.type !== "boss") {
+			let actions = [];
+			actions.push(
+				change({
+					type: "floor"
+				}, [x, y]),
+				change(old, newpos),
+				move(newpos));
+			store.dispatch(batch(actions));
 
-		store.dispatch(change({
-			type: "floor"
-		}, [x, y]));
-		store.dispatch(change(old, newpos));
-		store.dispatch(move(newpos));
+		}
+
 	};
 	keydown = (event) => {
 		switch (event.keyCode) {
