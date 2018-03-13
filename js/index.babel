@@ -307,12 +307,13 @@ const initiate = (state = initial, {
 			{
 
 				const [x, y] = payload.coords;
-				let newentitylist = Object.assign({}, state.entities);
+
+				let newentitylist = [...state.entitylist];
 				newentitylist[y][x] = payload.entity;
 
 
 				return { ...state,
-					entities: newentitylist
+					entitylist: newentitylist
 				};
 			};
 
