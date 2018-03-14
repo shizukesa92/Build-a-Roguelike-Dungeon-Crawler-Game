@@ -261,14 +261,7 @@ const generate = () => {
 
 
 
-// Action
-const initial = {
-	entitylist: [
-		[]
-	],
-	stage: 0,
-	position: []
-};
+// Actions
 
 const change = (entity, coords) => {
 	return {
@@ -301,7 +294,43 @@ const advance = (payload) => {
 	};
 }
 
-// Reducer
+const expup = (payload) => {
+	return {
+		type: "expup",
+		payload
+	};
+}
+
+const hpchange = (payload) => {
+	return {
+		type: "hpchange",
+		payload
+	};
+}
+
+const fogmode = () => {
+	return {
+		type: "fogmode"
+	};
+}
+
+const wepup = (payload) => {
+	return {
+		type: "wepup",
+		payload
+	};
+}
+
+// Reducers
+const initial = {
+	entitylist: [
+		[]
+	],
+	stage: 0,
+	position: [],
+	fog: true
+};
+
 const initiate = (state = initial, {
 	type,
 	payload
@@ -321,7 +350,10 @@ const initiate = (state = initial, {
 				};
 			};
 
-
+		case "fogmode":
+			return { ...state,
+				fog: !state.fog
+			};
 		case "move":
 			return { ...state,
 				position: payload
@@ -343,6 +375,41 @@ const initiate = (state = initial, {
 	}
 };
 
+const playerinitial = {
+	hp: 100,
+	exp: 100,
+	weapon: {
+		name: "Taser",
+		damage: 10
+	}
+};
+
+const player = (state = playerinitial, {
+	type,
+	payload
+}) => {
+	switch (type) {
+		case "wepup":
+			return { ...state,
+				weapon: payload
+			};
+		case "expup":
+			return { ...state,
+				exp: state.exp + payload
+			};
+		case "hpchange":
+			return { ...state,
+				hp: payload
+			};
+		default:
+			return state;
+	}
+};
+
+const reducers = Redux.combineReducers({
+	initiate,
+	player
+});
 // Batch Actions
 
 const batch = (actions) => {
@@ -368,36 +435,48 @@ const batchenable = (reducer) => {
 
 
 // Store
-const store = Redux.createStore(batchenable(initiate));
+const store = Redux.createStore(batchenable(reducers));
 
 store.dispatch(start(1));
 store.dispatch(advance(1));
+
+class Square extends React.Component {
+	render() {
+		let opaque = this.props.square.opacity;
+
+		this.props.distance > 10 && this.props.fog ? opaque = 0 : opaque = 1;
+
+		return (
+			<div className={
+                "square " + this.props.square.type 
+                   } style = {{opacity: opaque}}
+		   ></div>
+
+		)
+	}
+}
+
 class Dungeon extends React.Component {
 
 	render() {
-
 		let {
 			entitylist,
-			position
-		} = store.getState();
+			position,
+			fog
+		} = store.getState().initiate;
 		const [playerx, playery] = position;
-
-		entitylist.map((width, y) => width.map((square, x) => {
-			square.distance = (Math.abs(playery - y)) + (Math.abs(playerx - x));
-			square.distance > 10 ? square.opacity = 1 : square.opacity = 0;
-			return square;
-		}));
-
-		const squares = entitylist.map(width => {
+		const squares = entitylist.map((width, y) => {
 			return (
 
-				width.map(square => {
+				width.map((square, x) => {
+					let distance = (Math.abs(playery - y)) + (Math.abs(playerx - x));
+
 					return (
-						<div className={
-                "square " + square.type 
-                   }
-                 >
-                </div>
+						<Square
+									square={square}
+									distance={distance}
+									fog={fog}
+									/>
 					)
 				})
 
@@ -423,13 +502,13 @@ class Main extends React.Component {
 
 		let state = store.getState();
 
-		const [x, y] = state.position;
+		const [x, y] = state.initiate.position;
 		const [newx, newy] = vector;
 
 		const newpos = [newx + x, newy + y];
 
-		const old = state.entitylist[y][x];
-		const destination = state.entitylist[y + newy][x + newx];
+		const old = state.initiate.entitylist[y][x];
+		const destination = state.initiate.entitylist[y + newy][x + newx];
 
 		if (destination.type !== "wall" && destination.type !== "enemy" && destination.type !== "boss") {
 			let actions = [];
@@ -439,6 +518,75 @@ class Main extends React.Component {
 				}, [x, y]),
 				change(old, newpos),
 				move(newpos));
+
+			switch (destination.type) {
+				case "boss":
+				case "enemy":
+					{
+						const level = Math.floor(state.player.exp / 100);
+						const enemydmg = Math.floor(state.player.weapon.damage * _.random(1, 1.3) * level);
+						destination.health -= enemydmg;
+
+						if (destination.health > 0) {
+							const playerdmg = Math.floor(_.random(4, 7) * destination.level);
+
+							actions.push(
+								change(destination, newpos),
+								hpchange(state.player.hp - playerdmg),
+							);
+
+							if (state.player.hp - playerdmg <= 0) {
+								store.dispatch(hpchange(0));
+								setTimeout(() => dispatch(advance(1)), 250);
+								return;
+							}
+						}
+
+						if (destination.health <= 0) {
+							if (destination.type === "boss") {
+								actions.push(
+									expup(10),
+									change({
+										type: "floor"
+									}, [x, y]),
+									change(old, newpos),
+									move(newpos),
+								);
+
+								setTimeout(() => store.dispatch(batch([
+										start(1), advance(1)
+									])),
+									8000);
+							} else {
+								actions.push(
+									expup(10),
+									change({
+										type: 'floor'
+									}, [x, y]),
+									change(old, newpos),
+									move(newpos),
+								);
+
+							}
+						}
+						break;
+					}
+				case "potion":
+					actions.push(
+						hpchange(state.player.hp + 30),
+					);
+					break;
+				case "weapon":
+					actions.push(
+						wepup(destination),
+					);
+					break;
+				default:
+					break;
+			}
+
+
+
 			store.dispatch(batch(actions));
 
 		}
