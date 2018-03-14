@@ -641,3 +641,7 @@ ReactDOM.render(
 	<Main />,
 	document.getElementById("board")
 );
+
+$("#darkness").on("click", () => {
+	store.dispatch(fogmode());
+})
