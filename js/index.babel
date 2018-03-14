@@ -456,6 +456,37 @@ class Square extends React.Component {
 	}
 }
 
+class Stats extends React.Component {
+	render() {
+		let {
+			hp,
+			exp,
+			weapon
+		} = store.getState().player;
+		const level = Math.floor(exp / 100);
+		let {
+			stage
+		} = store.getState().initiate;
+
+		return (
+			<div>
+								<span className="stats"><b>Health:</b><span id="hp">{hp}</span></span>
+			<span className="stats"><b>Weapon:</b><span id="wep">{weapon.name}</span></span>
+			<span className="stats"><b>Attack:</b><span id="atk">{weapon.damage}</span></span>
+			<span className="stats"><b>Level:</b><span id="lvl">{level}</span></span>
+			<span className="stats"><b>Dungeon:</b><span id="dung">{stage}</span></span>
+			<button type="button" className="btn" id="darkness">Toggle darkness</button>
+					</div>
+		)
+	}
+
+}
+
+ReactDOM.render(
+	<Stats />,
+	document.getElementById("stats")
+);
+
 class Dungeon extends React.Component {
 
 	render() {
