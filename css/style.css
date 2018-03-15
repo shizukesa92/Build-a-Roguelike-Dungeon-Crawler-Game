@@ -29,15 +29,18 @@ h1 {
         display: flex;
         justify-content: space-between;
         padding-left: 1vh;
+        max-width: 60vw;
 }
 
 span {
         color: white;
+        font-size: 1vw;
 }
 
 #stat button {
         float: right;
         margin-right: 1vh;
+        font-size: 1vw;
 }
 
 #board {

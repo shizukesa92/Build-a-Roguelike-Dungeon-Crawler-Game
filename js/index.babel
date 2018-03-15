@@ -567,7 +567,6 @@ class Main extends React.Component {
 			case "boss":
 			case "enemy":
 				{
-					console.log("enemy");
 					const level = Math.floor(state.player.exp / 100);
 					const enemydmg = Math.floor(state.player.weapon.damage * (0.5 + Math.floor(Math.random()) * level));
 					destination.health -= enemydmg;
