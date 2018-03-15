@@ -469,7 +469,7 @@ class Stats extends React.Component {
 		} = store.getState().initiate;
 
 		return (
-			<div>
+			<div id = "stat">
 								<span className="stats"><b>Health:</b><span id="hp">{hp}</span></span>
 			<span className="stats"><b>Weapon:</b><span id="wep">{weapon.name}</span></span>
 			<span className="stats"><b>Attack:</b><span id="atk">{weapon.damage}</span></span>
@@ -540,87 +540,83 @@ class Main extends React.Component {
 
 		const old = state.initiate.entitylist[y][x];
 		const destination = state.initiate.entitylist[y + newy][x + newx];
+		let actions = [];
 
 		if (destination.type !== "wall" && destination.type !== "enemy" && destination.type !== "boss") {
-			let actions = [];
 			actions.push(
 				change({
 					type: "floor"
 				}, [x, y]),
 				change(old, newpos),
 				move(newpos));
+		}
+		switch (destination.type) {
+			case "boss":
+			case "enemy":
+				{
+					console.log("enemy");
+					const level = Math.floor(state.player.exp / 100);
+					const enemydmg = Math.floor(state.player.weapon.damage * (0.5 + Math.floor(Math.random()) * level));
+					destination.health -= enemydmg;
 
-			switch (destination.type) {
-				case "boss":
-				case "enemy":
-					{
-						const level = Math.floor(state.player.exp / 100);
-						const enemydmg = Math.floor(state.player.weapon.damage * _.random(1, 1.3) * level);
-						destination.health -= enemydmg;
+					if (destination.health > 0) {
+						const playerdmg = Math.floor(4 + Math.floor(Math.random() * 3) * destination.level);
 
-						if (destination.health > 0) {
-							const playerdmg = Math.floor(_.random(4, 7) * destination.level);
+						actions.push(
+							change(destination, newpos),
+							hpchange(state.player.hp - playerdmg),
+						);
 
+						if (state.player.hp - playerdmg <= 0) {
+							store.dispatch(hpchange(0));
+							setTimeout(() => dispatch(advance(1)), 250);
+							return;
+						}
+					}
+
+					if (destination.health <= 0) {
+						if (destination.type === "boss") {
 							actions.push(
-								change(destination, newpos),
-								hpchange(state.player.hp - playerdmg),
+								expup(10),
+								change({
+									type: "floor"
+								}, [x, y]),
+								change(old, newpos),
+								move(newpos),
 							);
 
-							if (state.player.hp - playerdmg <= 0) {
-								store.dispatch(hpchange(0));
-								setTimeout(() => dispatch(advance(1)), 250);
-								return;
-							}
+							setTimeout(() => store.dispatch(batch([
+									start(1), advance(1)
+								])),
+								8000);
+						} else {
+							actions.push(
+								expup(10),
+								change({
+									type: "floor"
+								}, [x, y]),
+								change(old, newpos),
+								move(newpos),
+							);
+
 						}
-
-						if (destination.health <= 0) {
-							if (destination.type === "boss") {
-								actions.push(
-									expup(10),
-									change({
-										type: "floor"
-									}, [x, y]),
-									change(old, newpos),
-									move(newpos),
-								);
-
-								setTimeout(() => store.dispatch(batch([
-										start(1), advance(1)
-									])),
-									8000);
-							} else {
-								actions.push(
-									expup(10),
-									change({
-										type: 'floor'
-									}, [x, y]),
-									change(old, newpos),
-									move(newpos),
-								);
-
-							}
-						}
-						break;
 					}
-				case "potion":
-					actions.push(
-						hpchange(state.player.hp + 30),
-					);
 					break;
-				case "weapon":
-					actions.push(
-						wepup(destination),
-					);
-					break;
-				default:
-					break;
-			}
-
-
-
-			store.dispatch(batch(actions));
-
+				}
+			case "potion":
+				actions.push(
+					hpchange(state.player.hp + 30),
+				);
+				break;
+			case "weapon":
+				actions.push(
+					wepup(destination),
+				);
+				break;
+			default:
+				break;
 		}
+		store.dispatch(batch(actions));
 
 	};
 	keydown = (event) => {
