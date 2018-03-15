@@ -20,6 +20,7 @@ body {
 h1 {
         margin: 0 !important;
         padding: 0 !important;
+        /* Removes whitespace created by h1 */
 }
 
 #stat {
@@ -28,24 +29,28 @@ h1 {
         align-items: center;
         display: flex;
         justify-content: space-between;
+        /* Spaces items out evenly */
         padding-left: 1vh;
-        max-width: 60vw;
+        max-width: 100%;
 }
 
 span {
         color: white;
         font-size: 1vw;
+        /* vw here used for responsive text sizing */
 }
 
 #stat button {
         float: right;
         margin-right: 1vh;
         font-size: 1vw;
+        /* vw here used for responsive text sizing */
 }
 
 #board {
         height: 80vh;
-        width: 60vw;
+        width: 100%;
+        /* VW here not responsive with bootstrap */
         background-color: black;
 }
 
@@ -63,9 +68,17 @@ span {
 }
 
 .square {
-        height: 1.6vh;
-        width: 1.2vw;
+        /* Use % instead of vw/vh otherwise not responsive with bootstrap. Should use % in children with parents with height and width */
+        height: 2%;
+        width: 2%;
         float: left;
+}
+
+#squares,
+#main {
+        height: 100%;
+        width: 100%
+        /* Requred because they are parent containers of .square, so the % height and width of .square will be relative to the height and width of these */
 }
 
 .enemy {

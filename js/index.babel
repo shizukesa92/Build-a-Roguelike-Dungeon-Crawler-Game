@@ -71,12 +71,14 @@ const entities = (map, stage = 1) => {
 		}
 	];
 
+	// Randomizes weapons generated
 	let weapon = [];
 	for (let i = 0; i < 3; i++) {
 		const random = weapons[Math.floor(Math.random() * 8)];
 		weapon.push(random);
 	}
 
+	// Randomizes locations
 	let position = [];
 
 	[potions, enemies, weapons, player, bosses].forEach(entity => {
@@ -145,13 +147,14 @@ const generate = () => {
 	};
 	map = place(map, seed);
 
+	// Function attempts to generate rooms in 4 cardinal directions, note that y extends downwards because rendering the squares starts from top left to bottom right
 	const grow = (map, {
 		xcoords,
 		ycoords,
 		rwidth,
 		rheight
 	}) => {
-		// Attempts to place rooms in given direction, note that y extends downwards because rendering the squares starts from top left to bottom right
+
 		const rooms = [];
 
 		const south = {
@@ -196,6 +199,7 @@ const generate = () => {
 		west.xdoor = xcoords - 1;
 		west.ydoor = west.ycoords + 1;
 		rooms.push(west);
+
 		// Validifies map placement
 		const valid = (map, {
 			xcoords,
@@ -221,6 +225,8 @@ const generate = () => {
 			}
 			return true;
 		};
+
+		// Constant placed contains placed rooms. Function calls function which generates rooms in 4 cardinal directions and returns the rooms which pass the validity test
 		const placed = [];
 		rooms.forEach(room => {
 			if (valid(map, room)) {
@@ -234,6 +240,7 @@ const generate = () => {
 				placed.push(room);
 			}
 		});
+
 		return {
 			map,
 			placed
@@ -258,11 +265,7 @@ const generate = () => {
 };
 
 
-
-
-
 // Actions
-
 const change = (entity, coords) => {
 	return {
 		type: "change",
@@ -410,8 +413,8 @@ const reducers = Redux.combineReducers({
 	initiate,
 	player
 });
-// Batch Actions
 
+// Batch Actions
 const batch = (actions) => {
 	return {
 		type: "batch",
@@ -421,12 +424,10 @@ const batch = (actions) => {
 
 // Batch Reducer
 const batchenable = (reducer) => {
-
 	return function batchreduce(state, action) {
 		switch (action.type) {
 			case "batch":
 				return action.payload.reduce(batchreduce, state);
-
 			default:
 				return reducer(state, action);
 		}
@@ -437,9 +438,11 @@ const batchenable = (reducer) => {
 // Store
 const store = Redux.createStore(batchenable(reducers));
 
+// Initializes map and stage
 store.dispatch(start(1));
 store.dispatch(advance(1));
 
+// Renders squares and generates fog if enabled
 class Square extends React.Component {
 	render() {
 		let opaque = this.props.square.opacity;
@@ -456,13 +459,13 @@ class Square extends React.Component {
 	}
 }
 
+// Renders Stats
 class Stats extends React.Component {
-
+	// Must forceupdate or it won't update when stats change
 	componentDidMount() {
 		this.unsubscribe = store.subscribe(() =>
 			this.forceUpdate()
 		);
-
 	}
 
 	componentWillUnmount() {
@@ -500,6 +503,7 @@ ReactDOM.render(
 	document.getElementById("stats")
 );
 
+// Main UI component which maps entities (including squares) to board
 class Dungeon extends React.Component {
 
 	render() {
@@ -511,10 +515,8 @@ class Dungeon extends React.Component {
 		const [playerx, playery] = position;
 		const squares = entitylist.map((width, y) => {
 			return (
-
 				width.map((square, x) => {
 					let distance = (Math.abs(playery - y)) + (Math.abs(playerx - x));
-
 					return (
 						<Square
 									square={square}
@@ -523,20 +525,17 @@ class Dungeon extends React.Component {
 									/>
 					)
 				})
-
 			)
 		});
-
-
-
-
 		return (
-			<div>
+			<div id = "squares">
 					{squares}
       </div>
 		)
 	}
 };
+
+// Main component handles all keypresses and actions
 class Main extends React.Component {
 	constructor(props) {
 		super(props);
@@ -545,7 +544,7 @@ class Main extends React.Component {
 	input = (vector) => {
 
 		let state = store.getState();
-
+		// Note the .initiate, because calling getState() from *combined* reducers will return multiple objects containing each of the the reducer states
 		const [x, y] = state.initiate.position;
 		const [newx, newy] = vector;
 
@@ -555,6 +554,7 @@ class Main extends React.Component {
 		const destination = state.initiate.entitylist[y + newy][x + newx];
 		let actions = [];
 
+		// Handles movement and prevents "walking through walls" or bosses
 		if (destination.type !== "wall" && destination.type !== "enemy" && destination.type !== "boss") {
 			actions.push(
 				change({
@@ -563,6 +563,8 @@ class Main extends React.Component {
 				change(old, newpos),
 				move(newpos));
 		}
+
+		//Handles picking of weapons and fighting of enemies
 		switch (destination.type) {
 			case "boss":
 			case "enemy":
@@ -586,6 +588,7 @@ class Main extends React.Component {
 						}
 					}
 
+					// Enemy death. Advances stage if boss death
 					if (destination.health <= 0) {
 						if (destination.type === "boss") {
 							actions.push(
@@ -596,7 +599,6 @@ class Main extends React.Component {
 								change(old, newpos),
 								move(newpos),
 							);
-
 							setTimeout(() => store.dispatch(batch([
 									start(1), advance(1)
 								])),
@@ -610,11 +612,12 @@ class Main extends React.Component {
 								change(old, newpos),
 								move(newpos),
 							);
-
 						}
 					}
 					break;
 				}
+
+				// Picking of items
 			case "potion":
 				actions.push(
 					hpchange(state.player.hp + 30),
@@ -629,8 +632,9 @@ class Main extends React.Component {
 				break;
 		}
 		store.dispatch(batch(actions));
-
 	};
+
+	// Handles movement on keypress
 	keydown = (event) => {
 		switch (event.keyCode) {
 			case 38:
@@ -669,7 +673,7 @@ class Main extends React.Component {
 	render() {
 
 		return (
-			<div>
+			<div id = "main">
 					<Dungeon />
       </div>
 		)
