@@ -457,7 +457,20 @@ class Square extends React.Component {
 }
 
 class Stats extends React.Component {
+
+	componentDidMount() {
+		this.unsubscribe = store.subscribe(() =>
+			this.forceUpdate()
+		);
+
+	}
+
+	componentWillUnmount() {
+		this.unsubscribe();
+	}
+
 	render() {
+
 		let {
 			hp,
 			exp,
