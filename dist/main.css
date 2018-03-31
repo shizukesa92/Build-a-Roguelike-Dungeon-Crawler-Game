@@ -1,0 +1,100 @@
+html,
+body {
+        max-height: 100vh;
+        max-width: 100vw;
+        margin: 0;
+        padding: 0;
+        background-color: beige !important;
+}
+
+#header {
+        display: flex;
+        height: 10vh;
+        background-color: brown;
+        color: white;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+}
+
+h1 {
+        margin: 0 !important;
+        padding: 0 !important;
+        /* Removes whitespace created by h1 */
+}
+
+#stat {
+        height: 5vh;
+        background-color: grey;
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        /* Spaces items out evenly */
+        padding-left: 1vh;
+        max-width: 100%;
+}
+
+span {
+        color: white;
+        font-size: 1vw;
+        /* vw here used for responsive text sizing */
+}
+
+#stat button {
+        float: right;
+        margin-right: 1vh;
+        font-size: 1vw;
+        /* vw here used for responsive text sizing */
+}
+
+#board {
+        height: 80vh;
+        width: 100%;
+        /* VW here not responsive with bootstrap */
+        background-color: black;
+}
+
+#footer {
+        height: 5vh;
+        display: flex;
+        align-items: center;
+        background-color: grey;
+        color: white;
+        justify-content: center;
+}
+
+.floor {
+        background-color: white;
+}
+
+.square {
+        /* Use % instead of vw/vh otherwise not responsive with bootstrap. Should use % in children with parents with height and width */
+        height: 2%;
+        width: 2%;
+        float: left;
+}
+
+#squares,
+#main {
+        height: 100%;
+        width: 100%
+        /* Requred because they are parent containers of .square, so the % height and width of .square will be relative to the height and width of these */
+}
+
+.enemy {
+        background-color: red;
+}
+
+.player {
+        background-color: green;
+}
+
+.potion {
+        background-color: blue;
+}
+
+.weapon {
+        background-color: orange;
+
+}
+

@@ -1,3 +1,9 @@
+import style from "./main.css";
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
+import { createStore, applyMiddleware, combineReducers } from 'redux';
+
 // Creates entities
 const entities = (map, stage = 1) => {
 
@@ -409,7 +415,7 @@ const player = (state = playerinitial, {
 	}
 };
 
-const reducers = Redux.combineReducers({
+const reducers = combineReducers({
 	initiate,
 	player
 });
@@ -436,7 +442,7 @@ const batchenable = (reducer) => {
 
 
 // Store
-const store = Redux.createStore(batchenable(reducers));
+const store = createStore(batchenable(reducers));
 
 // Initializes map and stage
 store.dispatch(start(1));
