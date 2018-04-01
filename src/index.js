@@ -1,8 +1,10 @@
 import style from "./main.css";
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { Provider } from 'react-redux';
-import { createStore, applyMiddleware, combineReducers } from 'redux';
+import React from "react";
+import ReactDOM from "react-dom";
+import {
+	createStore,
+	combineReducers
+} from "redux";
 
 // Creates entities
 const entities = (map, stage = 1) => {
@@ -357,7 +359,7 @@ const initiate = (state = initial, {
 				return { ...state,
 					entitylist: newentitylist
 				};
-			};
+			}
 
 		case "fogmode":
 			return { ...state,
@@ -459,7 +461,7 @@ class Square extends React.Component {
 			<div className={
                 "square " + this.props.square.type 
                    } style = {{opacity: opaque}}
-		   ></div>
+	></div>
 
 		)
 	}
@@ -539,7 +541,7 @@ class Dungeon extends React.Component {
       </div>
 		)
 	}
-};
+}
 
 // Main component handles all keypresses and actions
 class Main extends React.Component {
@@ -547,7 +549,7 @@ class Main extends React.Component {
 		super(props);
 	}
 
-	input = (vector) => {
+	input(vector) {
 
 		let state = store.getState();
 		// Note the .initiate, because calling getState() from *combined* reducers will return multiple objects containing each of the the reducer states
@@ -584,7 +586,7 @@ class Main extends React.Component {
 
 						actions.push(
 							change(destination, newpos),
-							hpchange(state.player.hp - playerdmg),
+							hpchange(state.player.hp - playerdmg)
 						);
 
 						if (state.player.hp - playerdmg <= 0) {
@@ -603,7 +605,7 @@ class Main extends React.Component {
 									type: "floor"
 								}, [x, y]),
 								change(old, newpos),
-								move(newpos),
+								move(newpos)
 							);
 							setTimeout(() => store.dispatch(batch([
 									start(1), advance(1)
@@ -616,7 +618,7 @@ class Main extends React.Component {
 									type: "floor"
 								}, [x, y]),
 								change(old, newpos),
-								move(newpos),
+								move(newpos)
 							);
 						}
 					}
@@ -626,22 +628,22 @@ class Main extends React.Component {
 				// Picking of items
 			case "potion":
 				actions.push(
-					hpchange(state.player.hp + 30),
+					hpchange(state.player.hp + 30)
 				);
 				break;
 			case "weapon":
 				actions.push(
-					wepup(destination),
+					wepup(destination)
 				);
 				break;
 			default:
 				break;
 		}
 		store.dispatch(batch(actions));
-	};
+	}
 
 	// Handles movement on keypress
-	keydown = (event) => {
+	keydown(event) {
 		switch (event.keyCode) {
 			case 38:
 			case 87:
@@ -663,7 +665,7 @@ class Main extends React.Component {
 				return;
 		}
 
-	};
+	}
 
 	componentDidMount() {
 		this.unsubscribe = store.subscribe(() =>
@@ -684,7 +686,7 @@ class Main extends React.Component {
       </div>
 		)
 	}
-};
+}
 
 ReactDOM.render(
 	<Main />,
@@ -693,4 +695,4 @@ ReactDOM.render(
 
 $("#darkness").on("click", () => {
 	store.dispatch(fogmode());
-})
+});
