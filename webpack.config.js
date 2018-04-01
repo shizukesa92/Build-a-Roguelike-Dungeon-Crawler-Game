@@ -1,15 +1,22 @@
 const HtmlWebPackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const webpack = require("webpack");
+const webpack = require("webpack"); /* Needed for jquery */
 
 module.exports = {
   module: {
     rules: [
       {
-        test: /\.js$/,
+        test: /\.(js|jsx)$/,
         exclude: /node_modules/,
         use: {
           loader: "babel-loader"
+        }
+      },
+	  {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: "eslint-loader"
         }
       },
       {
@@ -36,7 +43,7 @@ module.exports = {
       filename: "[name].css",
       chunkFilename: "[id].css"
     }),
-	new webpack.ProvidePlugin({
+	new webpack.ProvidePlugin({ /* Make sure webpack is defined above */
             $: "jquery",
             jQuery: "jquery"
         })
