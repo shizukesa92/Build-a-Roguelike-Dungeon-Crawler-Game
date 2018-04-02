@@ -643,7 +643,7 @@ class Main extends React.Component {
 	}
 
 	// Handles movement on keypress
-	keydown(event) {
+	keydown = (event) => {
 		switch (event.keyCode) {
 			case 38:
 			case 87:
