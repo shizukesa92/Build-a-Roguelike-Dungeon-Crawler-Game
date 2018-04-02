@@ -5,112 +5,27 @@ import {
 	createStore,
 	combineReducers
 } from "redux";
+import Dungeon from "./dungeon";
+import {
+	entitites
+} from './entities';
 
-// Creates entities
-const entities = (map, stage = 1) => {
-
-	const bosses = [];
-	if (stage == 4) {
-		bosses.push({
-			health: 400,
-			level: 5,
-			type: "boss"
-		});
-	}
-
-	const enemies = [];
-	for (let i = 0; i < 7; i++) {
-		enemies.push({
-			health: stage * 30 + 40,
-			level: stage - 1 + Math.floor(Math.random() * 3),
-			type: "enemy"
-		});
-	}
-	const player = [{
-		type: "player"
-	}];
-
-	const potions = [];
-	for (let i = 0; i < 5; i++) {
-		potions.push({
-			type: "potion"
-		});
-	}
-
-	const weapons = [{
-			name: "Laser Pistol",
-			damage: 15,
-			type: "weapon"
-		},
-		{
-			name: "Laser Rifle",
-			damage: 19,
-			type: "weapon"
-		},
-		{
-			name: "Plasma Pistol",
-			damage: 26,
-			type: "weapon"
-		},
-		{
-			name: "Plasma Rifle",
-			damage: 28,
-			type: "weapon"
-		},
-		{
-			name: "Electric ChainSaw",
-			damage: 31,
-			type: "weapon"
-		},
-		{
-			name: "Railgun",
-			damage: 33,
-			type: "weapon"
-		},
-		{
-			name: "Dark Energy Cannon",
-			damage: 40,
-			type: "weapon"
-		},
-		{
-			name: "BFG",
-			damage: 43,
-			type: "weapon"
-		}
-	];
-
-	// Randomizes weapons generated
-	let weapon = [];
-	for (let i = 0; i < 3; i++) {
-		const random = weapons[Math.floor(Math.random() * 8)];
-		weapon.push(random);
-	}
-
-	// Randomizes locations
-	let position = [];
-
-	[potions, enemies, weapons, player, bosses].forEach(entity => {
-
-		while (entity.length) {
-			const x = Math.floor(Math.random() * 50);
-			const y = Math.floor(Math.random() * 50);
-
-			if (map[y][x].type == "floor") {
-
-				if (entity[0].type == "player") {
-					position = [x, y];
-				}
-				map[y][x] = entity.pop();
-			}
-		}
-	});
-	return {
-		entitylist: map,
-		position
-	};
-}
-
-
+import {
+	store,
+	start,
+	change,
+	move,
+	advance,
+	expup,
+	hpchange,
+	fogmode,
+	wepup,
+	batch,
+	batchenable
+} from './redux';
+// Initializes map and stage
+store.dispatch(start(1));
+store.dispatch(advance(1));
 // Map generator
 const generate = () => {
 	// Generates a random array of length equals to grid height  
@@ -273,200 +188,6 @@ const generate = () => {
 };
 
 
-// Actions
-const change = (entity, coords) => {
-	return {
-		type: "change",
-		payload: {
-			entity,
-			coords
-		}
-	};
-}
-
-const move = (payload) => {
-	return {
-		type: "move",
-		payload
-	};
-}
-
-const start = (stage) => {
-	return {
-		type: "start",
-		payload: entities(generate(), stage)
-	};
-}
-
-const advance = (payload) => {
-	return {
-		type: "advance",
-		payload
-	};
-}
-
-const expup = (payload) => {
-	return {
-		type: "expup",
-		payload
-	};
-}
-
-const hpchange = (payload) => {
-	return {
-		type: "hpchange",
-		payload
-	};
-}
-
-const fogmode = () => {
-	return {
-		type: "fogmode"
-	};
-}
-
-const wepup = (payload) => {
-	return {
-		type: "wepup",
-		payload
-	};
-}
-
-// Reducers
-const initial = {
-	entitylist: [
-		[]
-	],
-	stage: 0,
-	position: [],
-	fog: true
-};
-
-const initiate = (state = initial, {
-	type,
-	payload
-}) => {
-	switch (type) {
-		case "change":
-			{
-
-				const [x, y] = payload.coords;
-
-				let newentitylist = [...state.entitylist];
-				newentitylist[y][x] = payload.entity;
-
-
-				return { ...state,
-					entitylist: newentitylist
-				};
-			}
-
-		case "fogmode":
-			return { ...state,
-				fog: !state.fog
-			};
-		case "move":
-			return { ...state,
-				position: payload
-			};
-
-
-		case "start":
-			return {
-				...state,
-				position: payload.position,
-				entitylist: payload.entitylist
-			};
-		case "advance":
-			return { ...state,
-				stage: payload
-			};
-		default:
-			return state;
-	}
-};
-
-const playerinitial = {
-	hp: 100,
-	exp: 100,
-	weapon: {
-		name: "Taser",
-		damage: 10
-	}
-};
-
-const player = (state = playerinitial, {
-	type,
-	payload
-}) => {
-	switch (type) {
-		case "wepup":
-			return { ...state,
-				weapon: payload
-			};
-		case "expup":
-			return { ...state,
-				exp: state.exp + payload
-			};
-		case "hpchange":
-			return { ...state,
-				hp: payload
-			};
-		default:
-			return state;
-	}
-};
-
-const reducers = combineReducers({
-	initiate,
-	player
-});
-
-// Batch Actions
-const batch = (actions) => {
-	return {
-		type: "batch",
-		payload: actions
-	}
-}
-
-// Batch Reducer
-const batchenable = (reducer) => {
-	return function batchreduce(state, action) {
-		switch (action.type) {
-			case "batch":
-				return action.payload.reduce(batchreduce, state);
-			default:
-				return reducer(state, action);
-		}
-	}
-}
-
-
-// Store
-const store = createStore(batchenable(reducers));
-
-// Initializes map and stage
-store.dispatch(start(1));
-store.dispatch(advance(1));
-
-// Renders squares and generates fog if enabled
-class Square extends React.Component {
-	render() {
-		let opaque = this.props.square.opacity;
-
-		this.props.distance > 10 && this.props.fog ? opaque = 0 : opaque = 1;
-
-		return (
-			<div className={
-                "square " + this.props.square.type 
-                   } style = {{opacity: opaque}}
-	></div>
-
-		)
-	}
-}
-
 // Renders Stats
 class Stats extends React.Component {
 	// Must forceupdate or it won't update when stats change
@@ -511,37 +232,6 @@ ReactDOM.render(
 	document.getElementById("stats")
 );
 
-// Main UI component which maps entities (including squares) to board
-class Dungeon extends React.Component {
-
-	render() {
-		let {
-			entitylist,
-			position,
-			fog
-		} = store.getState().initiate;
-		const [playerx, playery] = position;
-		const squares = entitylist.map((width, y) => {
-			return (
-				width.map((square, x) => {
-					let distance = (Math.abs(playery - y)) + (Math.abs(playerx - x));
-					return (
-						<Square
-									square={square}
-									distance={distance}
-									fog={fog}
-									/>
-					)
-				})
-			)
-		});
-		return (
-			<div id = "squares">
-					{squares}
-      </div>
-		)
-	}
-}
 
 // Main component handles all keypresses and actions
 class Main extends React.Component {

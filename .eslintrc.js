@@ -1,14 +1,10 @@
-{
+module.exports = {
     "parser": "babel-eslint",
     "env": {
         "browser": true,
-        "node": true
-    },
-    "settings": {
-        "ecmascript": 6,
-        "jsx": true,
+        "node": true,
 		"es6": true,
-    "browser": true
+		"jsx": true
     },
     "plugins": [
         "react",
@@ -39,6 +35,6 @@
 	        "plugin:react-redux/recommended",
 			  "plugin:react/recommended",
 			  "eslint:recommended",
-			  "extends": "airbnb"
+			  "airbnb"
 	]
 }
