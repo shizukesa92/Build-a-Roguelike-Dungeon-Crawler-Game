@@ -34,7 +34,15 @@ module.exports = {
             }, {
                 loader: "sass-loader" // compiles Sass to CSS
             }]
-	  }
+	  },
+	  {
+        test: /\.(js|jsx|html)$/,
+        exclude: /node_modules/,
+        loader: "eslint-loader",
+        options: {
+          emitWarning: true,
+        }
+      }
     ]
   },
   plugins: [

@@ -4,13 +4,13 @@ module.exports = {
         "browser": true,
         "node": true,
 		"es6": true,
-		"jsx": true
     },
     "plugins": [
         "react",
 		"babel",
 		"react-redux",
-		"import"
+		"import",
+		"html"
     ],
     "rules": {
 	    "max-len": [1, 120, 2, {ignoreComments: true}],
